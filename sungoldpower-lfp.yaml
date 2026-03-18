@@ -65,14 +65,14 @@ uart:
           id(last_rx_time) = millis();
           if (bytes.empty()) return;
 
-          std::string line(bytes.begin(), bytes.end());
+          const std::string line(bytes.begin(), bytes.end());
 
           // Process Q1 Response
           // We use a leading space in sscanf to skip any leading \n or whitespace from previous packets
           float ip_v, ip_f_v, op_v, op_c, op_f, bat_v, temp;
           char bits[9]; // 8 bits + null terminator
 
-          int parsed = sscanf(line.c_str(), " (%f %f %f %f %f %f %f %8s", &ip_v, &ip_f_v, &op_v, &op_c, &op_f, &bat_v, &temp, bits);
+          const int parsed = sscanf(line.c_str(), " (%f %f %f %f %f %f %f %8s", &ip_v, &ip_f_v, &op_v, &op_c, &op_f, &bat_v, &temp, bits);
 
           if (parsed == 8) {
             id(last_q1_rx_time) = millis();
@@ -100,7 +100,7 @@ interval:
   - interval: 2s
     then:
       - lambda: |-
-          uint32_t now = millis();
+          const uint32_t now = millis();
           // If we haven't received a valid Q1 payload in a while, AND the line has been quiet
           if ((now - id(last_q1_rx_time) > id(q1_timeout_ms)) && (now - id(last_rx_time) > id(quiet_line_ms))) {
             id(uart_bus).write_str("Q1\r");
