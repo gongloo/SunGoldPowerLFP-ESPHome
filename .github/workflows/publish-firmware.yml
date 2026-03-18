@@ -10,17 +10,12 @@ permissions:
 jobs:
   build-firmware:
     name: Build Firmware
-    uses: esphome/workflows/.github/workflows/build.yml@2025.10.0
+    uses: ./.github/workflows/build-esphome.yml
     with:
-      #### Modify below here to match your project ####
       files: |
-        project-template-esp32.factory.yaml
-        project-template-esp32-c3.factory.yaml
-        project-template-esp32-c6.factory.yaml
-        project-template-esp32-s3.factory.yaml
+        sungoldpower-lfp.yaml
       esphome-version: 2026.2.4
-      combined-name: project-template
-      #### Modify above here to match your project ####
+      combined-name: sungoldpower-lfp
 
       release-summary: ${{ github.event.release.body }}
       release-url: ${{ github.event.release.html_url }}

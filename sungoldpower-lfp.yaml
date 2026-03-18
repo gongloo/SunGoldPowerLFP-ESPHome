@@ -1,0 +1,185 @@
+substitutions:
+  name: sungoldpower-lfp
+  uart_tx_pin: GPIO0
+  uart_rx_pin: GPIO1
+  relay_pin: GPIO10
+
+esphome:
+  name: ${name}
+  friendly_name: Sungoldpower LFP
+
+esp32:
+  board: lolin_c3_mini
+  framework:
+    type: esp-idf
+
+wifi:
+  ap:
+    ssid: "${name} Fallback"
+
+# Captive Portal & OTA
+captive_portal:
+
+improv_serial:
+
+esp32_improv:
+  authorizer: none
+
+logger:
+  level: DEBUG
+
+ota:
+  - platform: esphome
+    password: "!secret ota_password"
+
+# Web Server Version 3
+web_server:
+  version: 3
+
+globals:
+  - id: last_rx_time
+    type: uint32_t
+    initial_value: "0"
+  - id: last_q1_rx_time
+    type: uint32_t
+    initial_value: "0"
+  - id: q1_timeout_ms # Configurable timeout before we actively poll
+    type: uint32_t
+    initial_value: "15000"
+  - id: quiet_line_ms # How long the line must be quiet before we transmit
+    type: uint32_t
+    initial_value: "2000"
+
+uart:
+  id: uart_bus
+  tx_pin: ${uart_tx_pin}
+  rx_pin: ${uart_rx_pin}
+  baud_rate: 2400
+  debug:
+    direction: RX
+    dummy_receiver: true
+    after:
+      delimiter: "\r"
+    sequence:
+      - lambda: |-
+          id(last_rx_time) = millis();
+          if (bytes.empty()) return;
+
+          std::string line(bytes.begin(), bytes.end());
+
+          // Process Q1 Response
+          // We use a leading space in sscanf to skip any leading \n or whitespace from previous packets
+          float ip_v, ip_f_v, op_v, op_c, op_f, bat_v, temp;
+          char bits[9]; // 8 bits + null terminator
+
+          int parsed = sscanf(line.c_str(), " (%f %f %f %f %f %f %f %8s", &ip_v, &ip_f_v, &op_v, &op_c, &op_f, &bat_v, &temp, bits);
+
+          if (parsed == 8) {
+            id(last_q1_rx_time) = millis();
+            id(inv_ip_voltage).publish_state(ip_v);
+            id(inv_ip_fault_voltage).publish_state(ip_f_v);
+            id(inv_op_voltage).publish_state(op_v);
+            id(inv_op_current).publish_state(op_c);
+            id(inv_op_frequency).publish_state(op_f);
+            id(inv_battery_voltage).publish_state(bat_v);
+            id(inv_temperature).publish_state(temp);
+            
+            // Parse Status Bits
+            id(stat_utility_fail).publish_state(bits[0] == '1');
+            id(stat_battery_low).publish_state(bits[1] == '1');
+            id(stat_avr_active).publish_state(bits[2] == '1');
+            id(stat_ups_failed).publish_state(bits[3] == '1');
+            id(stat_line_interactive).publish_state(bits[4] == '1');
+            id(stat_test_progress).publish_state(bits[5] == '1');
+            id(stat_shutdown_active).publish_state(bits[6] == '1');
+            id(stat_beeper_on).publish_state(bits[7] == '1');
+          }
+
+# Active Polling Task
+interval:
+  - interval: 2s
+    then:
+      - lambda: |-
+          uint32_t now = millis();
+          // If we haven't received a valid Q1 payload in a while, AND the line has been quiet
+          if ((now - id(last_q1_rx_time) > id(q1_timeout_ms)) && (now - id(last_rx_time) > id(quiet_line_ms))) {
+            id(uart_bus).write_str("Q1\r");
+            // Reset timer to prevent spamming the bus while waiting for a response
+            id(last_q1_rx_time) = now; 
+          }
+
+# Exposed Inverter Power Control Relay
+switch:
+  - platform: gpio
+    pin: ${relay_pin} # Change to your actual relay pin
+    name: "Inverter Power Relay"
+    id: inverter_relay
+    icon: "mdi:power-socket-us"
+
+# Telemetry Sensors
+sensor:
+  - platform: template
+    id: inv_ip_voltage
+    name: "Input Voltage"
+    unit_of_measurement: "V"
+    device_class: voltage
+  - platform: template
+    id: inv_ip_fault_voltage
+    name: "Input Fault Voltage"
+    unit_of_measurement: "V"
+    device_class: voltage
+  - platform: template
+    id: inv_op_voltage
+    name: "Output Voltage"
+    unit_of_measurement: "V"
+    device_class: voltage
+  - platform: template
+    id: inv_op_current
+    name: "Output Current"
+    unit_of_measurement: "%"
+    icon: "mdi:current-ac"
+  - platform: template
+    id: inv_op_frequency
+    name: "Output Frequency"
+    unit_of_measurement: "Hz"
+    device_class: frequency
+  - platform: template
+    id: inv_battery_voltage
+    name: "Battery Voltage"
+    unit_of_measurement: "V"
+    device_class: voltage
+  - platform: template
+    id: inv_temperature
+    name: "Temperature"
+    unit_of_measurement: "°C"
+    device_class: temperature
+
+# Status Binary Sensors
+binary_sensor:
+  - platform: template
+    id: stat_utility_fail
+    name: "Utility Fail"
+    device_class: problem
+  - platform: template
+    id: stat_battery_low
+    name: "Battery Low"
+    device_class: battery
+  - platform: template
+    id: stat_avr_active
+    name: "AVR Active"
+  - platform: template
+    id: stat_ups_failed
+    name: "UPS Failed"
+    device_class: problem
+  - platform: template
+    id: stat_line_interactive
+    name: "Line Interactive Type"
+  - platform: template
+    id: stat_test_progress
+    name: "Test in Progress"
+  - platform: template
+    id: stat_shutdown_active
+    name: "Shutdown Active"
+  - platform: template
+    id: stat_beeper_on
+    name: "Beeper On"
