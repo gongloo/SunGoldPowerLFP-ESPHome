@@ -40,127 +40,72 @@ light:
   - platform: status_led
     id: light_led
     name: LED
+    icon: "mdi:led-on"
     pin:
       number: GPIO5
       inverted: true
+
+external_components:
+  - source:
+      type: local
+      path: components
 
 uart:
   id: uart_bus
   rx_pin: ${uart_rx_pin}
   baud_rate: 2400
-  debug:
-    direction: RX
-    dummy_receiver: true
-    after:
-      delimiter: "\r"
-    sequence:
-      - lambda: |-
-          if (bytes.empty()) return;
-
-          UARTDebug::log_string(direction, bytes, StringRef("RX: "));
-
-          const std::string line(bytes.begin(), bytes.end());
-
-          // Process Q1 Response
-          // We use a leading space in sscanf to skip any leading \n or whitespace from previous packets
-          float ip_v, ip_f_v, op_v, op_c, op_f, bat_v, temp;
-          char bits[9]; // 8 bits + null terminator
-
-          const int parsed = sscanf(line.c_str(), " (%f %f %f %f %f %f %f %8s", &ip_v, &ip_f_v, &op_v, &op_c, &op_f, &bat_v, &temp, bits);
-
-          if (parsed == 8) {
-            id(inv_ip_voltage).publish_state(ip_v);
-            id(inv_ip_fault_voltage).publish_state(ip_f_v);
-            id(inv_op_voltage).publish_state(op_v);
-            id(inv_op_current).publish_state(op_c);
-            id(inv_op_frequency).publish_state(op_f);
-            id(inv_battery_voltage).publish_state(bat_v);
-            id(inv_temperature).publish_state(temp);
-            
-            // Parse Status Bits
-            id(stat_utility_fail).publish_state(bits[0] == '1');
-            id(stat_battery_low).publish_state(bits[1] == '1');
-            id(stat_avr_active).publish_state(bits[2] == '1');
-            id(stat_ups_failed).publish_state(bits[3] == '1');
-            id(stat_line_interactive).publish_state(bits[4] == '1');
-            id(stat_test_progress).publish_state(bits[5] == '1');
-            id(stat_shutdown_active).publish_state(bits[6] == '1');
-            id(stat_beeper_on).publish_state(bits[7] == '1');
-          }
+# Inverter Component
+sungoldpower_lfp:
+  id: inverter
+  uart_id: uart_bus
+  update_interval: 10s
 
 switch:
   - platform: gpio
     pin: ${relay_pin}
     name: "Inverter Power Control"
     id: inverter_relay
-    icon: "mdi:power-socket-us"
+    icon: "mdi:power"
 
 # Telemetry Sensors
 sensor:
-  - platform: template
-    id: inv_ip_voltage
-    name: "Input Voltage"
-    unit_of_measurement: "V"
-    device_class: voltage
-  - platform: template
-    id: inv_ip_fault_voltage
-    name: "Input Fault Voltage"
-    unit_of_measurement: "V"
-    device_class: voltage
-  - platform: template
-    id: inv_op_voltage
-    name: "Output Voltage"
-    unit_of_measurement: "V"
-    device_class: voltage
-  - platform: template
-    id: inv_op_current
-    name: "Output Current"
-    unit_of_measurement: "%"
-    icon: "mdi:current-ac"
-  - platform: template
-    id: inv_op_frequency
-    name: "Output Frequency"
-    unit_of_measurement: "Hz"
-    device_class: frequency
-  - platform: template
-    id: inv_battery_voltage
-    name: "Battery Voltage"
-    unit_of_measurement: "V"
-    device_class: voltage
-  - platform: template
-    id: inv_temperature
-    name: "Temperature"
-    unit_of_measurement: "°C"
-    device_class: temperature
-    internal: true
+  - platform: sungoldpower_lfp
+    sungoldpower_lfp_id: inverter
+    ip_voltage:
+      name: "Input Voltage"
+    ip_fault_voltage:
+      name: "Input Fault Voltage"
+    op_voltage:
+      name: "Output Voltage"
+    op_current:
+      name: "Output Current"
+    op_frequency:
+      name: "Output Frequency"
+    battery_voltage:
+      name: "Battery Voltage"
+    temperature:
+      name: "Temperature"
+      internal: true
 
 # Status Binary Sensors
 binary_sensor:
-  - platform: template
-    id: stat_utility_fail
-    name: "Utility Fail"
-    device_class: problem
-  - platform: template
-    id: stat_battery_low
-    name: "Battery Low"
-    device_class: battery
-  - platform: template
-    id: stat_avr_active
-    name: "AVR Active"
-    internal: true
-  - platform: template
-    id: stat_ups_failed
-    name: "UPS Failed"
-    device_class: problem
-  - platform: template
-    id: stat_line_interactive
-    name: "Line Interactive Type"
-  - platform: template
-    id: stat_test_progress
-    name: "Test in Progress"
-  - platform: template
-    id: stat_shutdown_active
-    name: "Shutdown Active"
-  - platform: template
-    id: stat_beeper_on
-    name: "Beeper On"
+  - platform: sungoldpower_lfp
+    sungoldpower_lfp_id: inverter
+    utility_fail:
+      name: "Utility Fail"
+    battery_low:
+      name: "Battery Low"
+    avr_active:
+      name: "AVR Active"
+      internal: true
+    ups_failed:
+      name: "UPS Failed"
+    line_interactive:
+      name: "Line Interactive Type"
+    test_progress:
+      name: "Test in Progress"
+    shutdown_active:
+      name: "Shutdown Active"
+    beeper_on:
+      name: "Beeper On"
+      internal: true
