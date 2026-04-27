@@ -41,7 +41,7 @@ light:
     name: LED
     icon: "mdi:led-on"
     pin:
-      number: GPIO5
+      number: ${status_led_pin}
       inverted: true
 
 external_components:
