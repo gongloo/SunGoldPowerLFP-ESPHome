@@ -1,6 +1,6 @@
 # SunGoldPower LFP Inverter ESPHome Firmware
 
-This project provides ESPHome-based firmware for monitoring and controlling SunGoldPower LFP series inverter/chargers using an ESP32. It communicates with the inverter via its TTL serial port (typically an RJ45 jack) using the Q1 protocol.
+This project provides ESPHome-based firmware for monitoring and controlling SunGoldPower LFP series inverter/chargers using an ESP32. It communicates with the inverter via its TTL serial port (typically an RJ45 jack).
 
 ## Features
 
@@ -13,31 +13,33 @@ This project provides ESPHome-based firmware for monitoring and controlling SunG
 
 To build this controller, you will need:
 
-*   **ESP32 Board**: **Lolin C3 Mini** (or similar ESP32 board).
-*   **Relay Shield**: **Wemos Relay Shield** (used for inverter power control on GPIO10).
-*   **Inverter**: SunGoldPower LFP Series Inverter/Charger.
-*   **Wiring**: 
-    *   RJ45 cable (to be stripped/tapped).
-    *   Jumper wires for connecting the relay shield and serial pins.
+- **ESP32 Board**: **ESP32 Single Relay Board** (commonly found on AliExpress or similar).
+- **Inverter**: SunGoldPower LFP Series Inverter/Charger.
+- **Wiring**:
+  - RJ45 cable.
+  - RJ45 female to female adapter breakout board.
+  - Jumper wires for connecting the breakout board and relay board.
 
 ## Wiring Guide
 
 To enable communication, you must connect the ESP32 to the inverter's RJ45 communication port. The following table shows the required connections:
 
-| Inverter RJ45 Pin | Purpose           | ESP32 Pin (Lolin C3 Mini) |
-| :---------------- | :---------------- | :------------------------ |
-| Pin 2             | GND               | GND                       |
-| Pin 4             | +5V (Power)       | 5V / Vin                  |
-| Pin 6             | TX (Inverter Out) | GPIO1                     |
-| Pin 8             | RX (Inverter In)  | GPIO0                     |
+| Inverter RJ45 | Purpose                                      | Relay Board   |
+| :------------ | :------------------------------------------- | :------------ |
+| Pin 2         | GND                                          | GND           |
+| Pin 3         | Inverter On Switch                           | Relay COM     |
+| Pin 5         | +12V (Power)                                 | VCC, Relay NO |
+| Pin 6         | TX (Inverter Out)                            | GPIO21        |
+| Pin 8         | (Optional, not recommended) RX (Inverter In) | GPIO16        |
+
+> [!WARNING]
+> Make sure that your board supports 12V on VCC. Some boards only support 5V, which is available from Inverter RJ45 Pin 4.
 
 > [!IMPORTANT]
 > **RJ45 Pinout**: Pin 1 is the leftmost pin when looking into the socket with the clip/tab facing down.
 
-**Notes:**
-
-- **Relay Control (Optional)**: If you are using the Inverter Power Relay feature, it is mapped to **GPIO10** by default.
-- **Power**: The ESP32 can typically be powered directly from the inverter's Pin 4 (+5V). Ensure your ESP32 board is capable of accepting 5V input (most boards with a USB port are).
+> [!WARNING]
+> When operating in read-only mode, the remote LCD must be connected to the inverter in parallel with the ESP32. Optionally, the remote LCD can be omitted if the write pin is connected to the inverter. Note this may interfere with remote LCD function and is not recommended.
 
 ## Installation
 
