@@ -2,7 +2,7 @@
 
 ## 1. General Overview
 
-This document outlines the TTL communications protocol utilized in SunGoldPower LFP and AIMS PICO series Inverter/Chargers. It is also likely compatible with Sigineer low frequency Inverter/Chargers as well, though this has not been tested. The protocol enables a computer to control information exchange by sending a query followed by a carriage return (`<cr>`). The inverter subsequently responds with the requested information or performs an action, also followed by a `<cr>`.
+This document outlines the TTL communications protocol utilized in SunGoldPower LFP and AIMS PICO series Inverter/Chargers. It is also likely compatible with Sigineer low frequency Inverter/Chargers as well, though this has not been tested. The protocol enables a computer to control information exchange by sending a query followed by a carriage return (`\r`). The inverter subsequently responds with the requested information or performs an action, also followed by a `\r`.
 
 The protocol provides the following core capabilities:
 
@@ -33,8 +33,8 @@ The communication interface utilizes the following serial port settings:
 
 This command queries the real-time status telemetry of the inverter.
 
-- **Computer sends:** `Q1<cr>`
-- **Inverter responds:** `(MMM.M NNN.N PPP.P QQQ RR.R S.SS TT.T b7b6b5b4b3b2b1b0<cr>`
+- **Computer sends:** `Q1\r`
+- **Inverter responds:** `(MMM.M NNN.N PPP.P QQQ RR.R S.SS TT.T b7b6b5b4b3b2b1b0\r`
 
 **Data Stream Field Definitions:**
 _(Note: A space character separates every field.)_
@@ -48,7 +48,7 @@ _(Note: A space character separates every field.)_
 - **Battery voltage:** `SS.S` or `S.SS` (Integer 0-9). On-line units provide voltage/cell as `S.SS`. Standby units provide actual voltage as `SS.S`. The inverter status type dictates this format.
 - **Temperature:** `TT.T` (Integer 0-9; Unit: Degrees Celsius)
 - **Inverter Status (`<U>`):** A single byte of binary information formatted as `b7b6b5b4b3b2b1b0` where each bit is an ASCII `0` or `1`.
-- **Stop Byte:** `<cr>`
+- **Stop Byte:** `\r`
 
 **Status Byte Bitmask Breakdown (`<U>`):**
 | Bit | Description (When set to '1') |
@@ -64,22 +64,26 @@ _(Note: A space character separates every field.)_
 
 > **Example Query & Response:**
 >
-> - **Computer:** `Q1<cr>`
-> - **Inverter:** `(208.4 140.0 208.4 034 59.9 2.05 35.0 00110000<cr>`
+> - **Computer:** `Q1\r`
+> - **Inverter:** `(208.4 140.0 208.4 034 59.9 2.05 35.0 00110000\r`
 > - **Interpretation:** I/P voltage is 208.4V , I/P fault voltage is 140.0V , O/P voltage is 208.4V , O/P current is 34% , I/P frequency is 59.9 HZ , Battery voltage is 2.05V , Temperature is 35.0 degrees of centigrade , Status: Inverter type is on-line, Inverter failed, AVR active, and shutdown not active.
 
 ### 3.2 Turn On/Off Beep (Toggle Beeper)
 
+Appears to be unsupported.
+
 Toggles the warning beep generated when AC power fails, allowing the manager to silence the alarm.
 
-- **Computer sends:** `Q<cr>`
+- **Computer sends:** `Q\r`
 
 ### 3.3 Inverter Rating Information
 
+Appears to be unsupported.
+
 Queries the hardware rating values of the unit.
 
-- **Computer sends:** `F<cr>`
-- **Inverter responds:** `#MMM.M QQQ SS.SS RR.R<cr>`
+- **Computer sends:** `F\r`
+- **Inverter responds:** `#MMM.M QQQ SS.SS RR.R\r`
 
 _(Fields are separated by spaces.)_
 
@@ -88,16 +92,31 @@ _(Fields are separated by spaces.)_
 - **Battery Voltage:** `SS.SS` or `SSS.S`
 - **Frequency:** `RR.R`
 
-### 3.4 Additional System Queries
+### 3.4 Inverter Password
 
-- **Inverter Password:** \* **Computer:** `M<cr>`
+Appears to be unsupported.
 
-* **Inverter:** `C<cr>` / RUN formula
+- **Computer sends:** `M\r`
+- **Inverter responds:** `C\r` / RUN formula
 
-- **Inverter Fault State Query:** \* **Computer:** `G? <cr>`
+### 3.5 Inverter Fault State Query
 
-* **Inverter Responses:** `"Normal 04<cr>Fa"<cr>` (if normal) or `"Over Load"<cr>` (if overloaded)
+Appears to be unsupported.
 
-- **Inverter Charger Action Query:** \* **Computer:** `D<cr>`
+- **Computer sends:** `G? \r`
+- **Inverter responds:**
 
-* **Inverter Responses:** `"ACK"<cr>` (if charging) or `"NAK"<cr>` (if not charging)
+  `"Normal 04\rFa"\r` (if normal) or
+
+  `"Over Load"\r` (if overloaded)
+
+### 3.6 Inverter Charger Action Query
+
+Appears to be unsupported.
+
+- **Computer sends:** `D\r`
+- **Inverter responds:**
+
+  `"ACK"\r` (if charging) or
+
+  `"NAK"\r` (if not charging)
