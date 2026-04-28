@@ -53,6 +53,8 @@ class SunGoldPowerLFP : public PollingComponent, public uart::UARTDevice {
   binary_sensor::BinarySensor *beeper_on_binary_sensor_{nullptr};
 
   std::string rx_buffer_;
+  uint32_t last_read_time_{0};
+  bool is_offline_{false};
 };
 
 }  // namespace sungoldpower_lfp
