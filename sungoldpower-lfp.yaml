@@ -10,7 +10,7 @@ substitutions:
 
   # Path prefix for local repository checkout (default to current directory)
   # Useful when extending this config locally.
-  sungoldpowerlfp_component_source: "components"
+  sungoldpower_lfp_component_source: "components"
 
 esphome:
   name: ${name}
@@ -53,8 +53,8 @@ light:
       inverted: true
 
 external_components:
-  - source: ${sungoldpowerlfp_component_source}
-    id: "sungoldpowerlfp_component"
+  - source: ${sungoldpower_lfp_component_source}
+    id: "sungoldpower_lfp_component"
     components: ["sungoldpower_lfp"]
 
 uart:
