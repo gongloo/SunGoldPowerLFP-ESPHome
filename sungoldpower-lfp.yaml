@@ -1,9 +1,16 @@
 substitutions:
+  # Device Identity
   name: sungoldpower-lfp
   friendly_name: "SunGoldPower LFP"
+
+  # Hardware Pinout
   uart_rx_pin: GPIO21
   relay_pin: GPIO16
   status_led_pin: GPIO23
+
+  # Path prefix for local repository checkout (default to current directory)
+  # Useful when extending this config locally.
+  sungoldpowerlfp_component_source: "components"
 
 esphome:
   name: ${name}
@@ -45,9 +52,9 @@ light:
       inverted: true
 
 external_components:
-  - source:
-      type: local
-      path: components
+  - source: ${sungoldpowerlfp_component_source}
+    id: "sungoldpowerlfp_component"
+    components: ["sungoldpower_lfp"]
 
 uart:
   id: uart_bus
@@ -69,42 +76,59 @@ switch:
 # Telemetry Sensors
 sensor:
   - platform: sungoldpower_lfp
+    id: sungoldpower_sensors
     sungoldpower_lfp_id: inverter
     ip_voltage:
       name: "Input Voltage"
+      id: ip_voltage
     ip_fault_voltage:
       name: "Input Fault Voltage"
+      id: ip_fault_voltage
     op_voltage:
       name: "Output Voltage"
+      id: op_voltage
     op_current:
       name: "Output Current"
+      id: op_current
     op_frequency:
       name: "Output Frequency"
+      id: op_frequency
     battery_voltage:
       name: "Battery Voltage"
+      id: battery_voltage
     temperature:
       name: "Temperature"
+      id: inverter_temperature
       internal: true
 
 # Status Binary Sensors
 binary_sensor:
   - platform: sungoldpower_lfp
+    id: sungoldpower_binary_sensors
     sungoldpower_lfp_id: inverter
     utility_fail:
       name: "Utility Fail"
+      id: utility_fail
     battery_low:
       name: "Battery Low"
+      id: battery_low
     avr_active:
       name: "AVR Active"
+      id: avr_active
       internal: true
     ups_failed:
       name: "UPS Failed"
+      id: ups_failed
     line_interactive:
       name: "Line Interactive Type"
+      id: line_interactive
     test_progress:
       name: "Test in Progress"
+      id: test_progress
     shutdown_active:
       name: "Shutdown Active"
+      id: shutdown_active
     beeper_on:
       name: "Beeper On"
+      id: beeper_on
       internal: true
