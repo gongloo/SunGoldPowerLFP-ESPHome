@@ -37,7 +37,8 @@ logger:
 
 ota:
   - platform: esphome
-    password: "!secret ota_password"
+
+api:
 
 web_server:
   version: 3
