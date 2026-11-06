@@ -30,14 +30,14 @@ void SunGoldPowerLFP::loop() {
     if (this->battery_voltage_sensor_) this->battery_voltage_sensor_->publish_state(NAN);
     if (this->temperature_sensor_) this->temperature_sensor_->publish_state(NAN);
 
-    if (this->utility_fail_binary_sensor_) this->utility_fail_binary_sensor_->publish_state(false);
-    if (this->battery_low_binary_sensor_) this->battery_low_binary_sensor_->publish_state(false);
-    if (this->avr_active_binary_sensor_) this->avr_active_binary_sensor_->publish_state(false);
-    if (this->ups_failed_binary_sensor_) this->ups_failed_binary_sensor_->publish_state(false);
-    if (this->line_interactive_binary_sensor_) this->line_interactive_binary_sensor_->publish_state(false);
-    if (this->test_progress_binary_sensor_) this->test_progress_binary_sensor_->publish_state(false);
-    if (this->shutdown_active_binary_sensor_) this->shutdown_active_binary_sensor_->publish_state(false);
-    if (this->beeper_on_binary_sensor_) this->beeper_on_binary_sensor_->publish_state(false);
+    if (this->utility_fail_binary_sensor_) this->utility_fail_binary_sensor_->invalidate_state();
+    if (this->battery_low_binary_sensor_) this->battery_low_binary_sensor_->invalidate_state();
+    if (this->avr_active_binary_sensor_) this->avr_active_binary_sensor_->invalidate_state();
+    if (this->ups_failed_binary_sensor_) this->ups_failed_binary_sensor_->invalidate_state();
+    if (this->line_interactive_binary_sensor_) this->line_interactive_binary_sensor_->invalidate_state();
+    if (this->test_progress_binary_sensor_) this->test_progress_binary_sensor_->invalidate_state();
+    if (this->shutdown_active_binary_sensor_) this->shutdown_active_binary_sensor_->invalidate_state();
+    if (this->beeper_on_binary_sensor_) this->beeper_on_binary_sensor_->invalidate_state();
   }
 
   while (this->available()) {
